@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "hell0world.desktop-weather",
+  "name": "Desktop Weather",
+  "version": "1.0.0",
+  "author": "hell0world",
+  "description": "Weather widget drawn on the desktop, above the wallpaper and below windows. Shows the current temperature in degrees Celsius from Open-Meteo, refreshed every 15 minutes.",
+  "kinds": [
+    "service"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml"
+  }
+}
