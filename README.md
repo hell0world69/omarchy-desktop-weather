@@ -3,6 +3,8 @@
 A clock and weather card drawn on the desktop, above the wallpaper and below
 your windows. It follows the active Omarchy theme.
 
+![Desktop Weather widget](screenshot.png)
+
 - Current time, temperature (°C), feels-like, humidity, and a three-day forecast
 - Weather from [Open-Meteo](https://open-meteo.com/), refreshed every 15 minutes
 - Sits at the top center of every screen by default
