@@ -306,11 +306,13 @@ Item {
 
             Text {
               textFormat: Text.PlainText
-              text: Qt.formatDateTime(root.now, "HH:mm")
+              text: Qt.formatDateTime(root.now, "HH:mm:ss")
               color: Commons.Color.foreground
               font.family: Commons.Style.fontFamily
               font.pixelSize: 64
               font.weight: Font.Light
+              // Equal-width digits, so the card doesn't resize as seconds tick.
+              font.features: { "tnum": 1 }
             }
 
             Text {
