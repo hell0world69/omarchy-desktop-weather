@@ -232,6 +232,26 @@ Item {
     onTriggered: root.now = new Date()
   }
 
+  // The bar's background look (opaque, glassy or none), read straight from
+  // shell.json and watched, so the card follows it live. The shell's copy of
+  // the bar config handed to plugins is a snapshot that a shell.json edit
+  // does not always refresh. A file that fails to parse (caught mid-write)
+  // keeps the last good look.
+  property string barLook: "opaque"
+  FileView {
+    path: (Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config") + "/omarchy/shell.json"
+    watchChanges: true
+    printErrors: false
+    onFileChanged: reload()
+    onLoaded: {
+      try {
+        var bar = JSON.parse(text()).bar || {}
+        var look = bar.background || (bar.transparent === true ? "none" : "opaque")
+        root.barLook = ["opaque", "glassy", "none"].indexOf(look) >= 0 ? look : "opaque"
+      } catch (e) {}
+    }
+  }
+
   FileView {
     id: stateFile
     path: root.statePath
@@ -307,12 +327,11 @@ Item {
         readonly property bool docked: root.posY < 0 && win.barSize > 0
         radius: 16
         // Same fill as the bar: opaque, glassy (see-through) or clear, from
-        // bar.background in shell.json and the theme's bar color, worked out
-        // the way the bar does it. Updates live with the theme and the bar.
+        // bar.background in shell.json (barLook) and the theme's bar color,
+        // worked out the way the bar does it. Updates live.
         color: docked ? "transparent" : fill
         property color fill: {
-          var config = root.shell && root.shell.barConfig ? root.shell.barConfig : ({})
-          var look = config.background || (config.transparent === true ? "none" : "opaque")
+          var look = root.barLook
           var bg = Commons.Color.bar.background
           if (look === "none") return "transparent"
           // Darker than the bar's 0.35 (0.62): the bar is also blurred (which darkens
