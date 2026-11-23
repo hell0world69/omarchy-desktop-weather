@@ -7,7 +7,10 @@ your windows. It follows the active Omarchy theme.
 
 - Current time, temperature (°C), feels-like, humidity, and a three-day forecast
 - Weather from [Open-Meteo](https://open-meteo.com/), refreshed every 15 minutes
-- Sits at the top center of every screen by default
+- Sits at the top center of every screen by default, hanging from the bar's
+  bottom edge so the two read as one surface
+- Takes the bar's background: solid, glassy (see-through), or clear, in the
+  theme's bar color
 - Drag to move it; left click to refresh
 - A dragged position is kept until you change the display scale or text size,
   then the card goes back to the top center

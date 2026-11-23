@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Shapes
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -263,6 +264,16 @@ Item {
 
       function clamp(v, lo, hi) { return Math.max(lo, Math.min(v, Math.max(lo, hi))) }
 
+      // Height of the bar on this screen when it sits visible along the top,
+      // otherwise 0.
+      readonly property real barSize: {
+        var bar = root.shell ? root.shell.bar : null
+        if (!bar || bar.barHidden || bar.position !== "top") return 0
+        var sizes = bar.barSizes || ({})
+        var own = sizes[win.screen ? win.screen.name : ""]
+        return Math.max(0, own !== undefined ? own : (bar.barSize || 0))
+      }
+
       // A dragged position only holds at the scale and text size it was made
       // at; after either changes, the card goes back to the top center. The
       // screen's logical size is used because the window reports a placeholder
@@ -287,13 +298,55 @@ Item {
       Rectangle {
         id: card
         x: root.posX < 0 ? Math.max(0, (win.width - width) / 2) : win.clamp(root.posX, 0, win.width - width)
-        y: root.posY < 0 ? 24 : win.clamp(root.posY, 0, win.height - height)
+        y: root.posY < 0 ? (docked ? win.barSize : 24) : win.clamp(root.posY, 0, win.height - height)
         implicitWidth: content.implicitWidth + 48
         implicitHeight: content.implicitHeight + 32
+        // At its default spot under a visible top bar, the card hangs from the
+        // bar's bottom edge with square top corners, so the two read as one
+        // surface. Dragged elsewhere, it is a free-standing rounded card.
+        readonly property bool docked: root.posY < 0 && win.barSize > 0
         radius: 16
-        color: Qt.alpha(Commons.Color.background, 0.25)
-        border.width: 1
-        border.color: Qt.alpha(Commons.Color.foreground, 0.08)
+        // Same fill as the bar: opaque, glassy (see-through) or clear, from
+        // bar.background in shell.json and the theme's bar color, worked out
+        // the way the bar does it. Updates live with the theme and the bar.
+        color: docked ? "transparent" : fill
+        property color fill: {
+          var config = root.shell && root.shell.barConfig ? root.shell.barConfig : ({})
+          var look = config.background || (config.transparent === true ? "none" : "opaque")
+          var bg = Commons.Color.bar.background
+          if (look === "none") return "transparent"
+          // Darker than the bar's 0.35 (0.62): the bar is also blurred (which darkens
+          // it) and the card is not, so this tint meets the bar edge without a step.
+          if (look === "glassy") return Qt.rgba(bg.r, bg.g, bg.b, Math.min(bg.a, 0.62))
+          return bg
+        }
+
+        // Docked, the card is drawn as one shape: square to the bar along the
+        // top, with inward curves on both sides where it meets the bar, so the
+        // bar flows down into it. One path keeps the joins free of seams.
+        Shape {
+          visible: card.docked
+          readonly property real r: 16
+          readonly property real w: card.width
+          readonly property real h: card.height
+          x: -r
+          width: w + 2 * r
+          height: h
+          preferredRendererType: Shape.CurveRenderer
+          ShapePath {
+            strokeWidth: -1
+            fillColor: card.fill
+            startX: 0; startY: 0
+            PathLine { x: card.width + 32; y: 0 }
+            PathArc { x: card.width + 16; y: 16; radiusX: 16; radiusY: 16; direction: PathArc.Counterclockwise }
+            PathLine { x: card.width + 16; y: card.height - 16 }
+            PathArc { x: card.width; y: card.height; radiusX: 16; radiusY: 16 }
+            PathLine { x: 32; y: card.height }
+            PathArc { x: 16; y: card.height - 16; radiusX: 16; radiusY: 16 }
+            PathLine { x: 16; y: 16 }
+            PathArc { x: 0; y: 0; radiusX: 16; radiusY: 16; direction: PathArc.Counterclockwise }
+          }
+        }
 
         Row {
           id: content
